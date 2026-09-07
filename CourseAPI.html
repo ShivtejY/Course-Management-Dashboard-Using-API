@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Management Dashboard - Shivtej Yadav</title>
+<style>
+:root{ --primary:#4f46e5; --secondary:#0ea5e9; --bg:#f8fafc; --card:#ffffff; --text:#1e293b; --muted:#64748b; }
+*{margin:0;padding:0;box-sizing:border-box;font-family: 'Segoe UI', sans-serif;}
+body{background:var(--bg);color:var(--text);}
+header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;padding:20px 30px;display:flex;justify-content:space-between;flex-wrap:wrap;}
+.student-info{background:white;margin:20px;border-radius:12px;padding:15px 20px;display:flex;gap:20px;flex-wrap:wrap;box-shadow:0 4px 12px rgba(0,0,0,0.05);font-size:14px}
+.dashboard{padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
+.stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);border-left:4px solid var(--primary)}
+.main{padding:0 20px 30px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.card{background:white;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+.btn-primary{background:#4f46e5;color:white}.btn-danger{background:#ef4444;color:white}.btn-edit{background:#f59e0b;color:white}
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:15px}
+.course{border:1px solid #e2e8f0;border-radius:10px;padding:15px}
+form input,form textarea,form select{width:100%;padding:10px;margin:8px 0;border:1px solid #e2e8f0;border-radius:8px}
+.architecture{background:#1e293b;color:#94a3b8;padding:12px;border-radius:8px;font-family:monospace;text-align:center;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<div><h1>COURSE MANAGEMENT DASHBOARD USING API</h1><p>Yashwantrao Chavan Mahavidyalaya, Islampur | 2026-27 | iBase Technologies</p></div>
+</header>
+
+<div class="student-info">
+<div><b>Student:</b> Yadav Shivtej Rahul</div><div><b>Class:</b> B.Sc-III CS</div><div id="apiStatus">● API Connected - REST / JSON</div>
+</div>
+
+<div class="dashboard">
+<div class="stat-card"><h3 id="totalCourses">0</h3><p>Total Courses</p></div>
+<div class="stat-card"><h3 id="activeCourses">0</h3><p>Active</p></div>
+<div class="stat-card"><h3>API</h3><p>REST + JSON</p></div>
+<div class="stat-card"><h3>CRUD</h3><p>Add/Edit/Delete</p></div>
+</div>
+
+<div class="main">
+<div class="card">
+<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<h2>Course Module</h2><input type="text" id="searchInput" placeholder="Search..." style="padding:10px;border-radius:8px;border:1px solid #ddd">
+</div>
+<div class="architecture" style="margin-top:15px">User → Web Dashboard → JS/API Request → REST API → JSON Response → Dashboard</div>
+<div class="course-grid" id="courseGrid" style="margin-top:20px"></div>
+</div>
+
+<div class="card">
+<h3>Add / Edit Module</h3>
+<form id="courseForm" onsubmit="handleSubmit(event)">
+<input type="hidden" id="courseId">
+<input type="text" id="cName" placeholder="Course Name *" required>
+<textarea id="cDesc" placeholder="Description *" required></textarea>
+<input type="text" id="cInstructor" placeholder="Instructor *" required>
+<input type="text" id="cDuration" placeholder="Duration *" required>
+<select id="cLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+<button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px">Save Course</button>
+<button type="button" class="btn" style="width:100%;margin-top:8px;background:#e2e8f0" onclick="resetForm()">Reset</button>
+</form>
+</div>
+</div>
+
+<script>
+let courses = JSON.parse(localStorage.getItem('cms_courses')) || [
+{id:1,name:"Web Development Fundamentals",desc:"HTML5, CSS3, JS and REST API concepts.",instructor:"Prof. iBase",duration:"3 Months",level:"Beginner"},
+{id:2,name:"Python Programming",desc:"Core Python and API integration.",instructor:"Dr. Yadav",duration:"2 Months",level:"Beginner"},
+{id:3,name:"Data Structures in C",desc:"Complete DSA for B.Sc CS.",instructor:"Prof. Chavan",duration:"4 Months",level:"Intermediate"}
+];
+function saveToAPI(){localStorage.setItem('cms_courses',JSON.stringify(courses))}
+function render(){
+ const grid=document.getElementById('courseGrid'); const search=document.getElementById('searchInput').value.toLowerCase();
+ const filtered=courses.filter(c=>c.name.toLowerCase().includes(search));
+ grid.innerHTML=filtered.map(c=>`<div class="course"><h4 style="color:#4f46e5">${c.name}</h4><p style="font-size:13px;color:#64748b">${c.instructor} | ${c.duration} | ${c.level}</p><p style="font-size:13px;margin-top:8px">${c.desc}</p><div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-edit" onclick="editCourse(${c.id})">Edit</button><button class="btn btn-danger" onclick="deleteCourse(${c.id})">Delete</button></div></div>`).join('');
+ document.getElementById('totalCourses').innerText=courses.length;
+ document.getElementById('activeCourses').innerText=filtered.length;
+}
+function handleSubmit(e){e.preventDefault();
+ let data={name:cName.value,desc:cDesc.value,instructor:cInstructor.value,duration:cDuration.value,level:cLevel.value};
+ if(courseId.value){let i=courses.findIndex(c=>c.id==courseId.value); courses[i]={...courses[i],...data};}
+ else{data.id=Date.now(); courses.push(data);} saveToAPI(); render(); resetForm();
+}
+function editCourse(id){let c=courses.find(x=>x.id==id); courseId.value=c.id; cName.value=c.name; cDesc.value=c.desc; cInstructor.value=c.instructor; cDuration.value=c.duration; window.scrollTo({top:0,behavior:'smooth'})}
+function deleteCourse(id){if(confirm('Delete?')){courses=courses.filter(c=>c.id!=id); saveToAPI(); render();}}
+function resetForm(){courseForm.reset(); courseId.value='';}
+searchInput.addEventListener('input',render); render();
+</script>
+</body>
+</html>
